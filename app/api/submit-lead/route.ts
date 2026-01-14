@@ -122,7 +122,7 @@ export async function POST(request: Request) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       await resend.emails.send({
         from: 'Capital Qualifier <onboarding@resend.dev>',
-        to: 'pfd@bitcense.com',
+        to: 'paul.dicesare@gmail.com',
         subject: `[${qualificationScore.toUpperCase().replace('_', ' ')}] New ${leadType === 'originator' ? 'Originator' : 'Borrower'} Lead: ${companyName}`,
         text: emailText,
       })
