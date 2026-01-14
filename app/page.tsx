@@ -44,7 +44,7 @@ export default function Home() {
               className="group block p-8 rounded-card border-2 border-border bg-card-cool hover:border-accent hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
             >
               <h2 className="text-xl font-bold text-text-primary mb-3 group-hover:text-accent transition-colors duration-200">
-                I'm a Private Lender
+                I&apos;m a Private Lender
               </h2>
               <p className="text-text-secondary text-[15px] leading-relaxed mb-6">
                 Transform your portfolio into tokenized securities accessing global retail capital. Bypass institutional gatekeepers.
