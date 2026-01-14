@@ -118,17 +118,19 @@ export async function POST(request: Request) {
     const companyName = 'companyName' in data ? data.companyName : 'Unknown'
 
     // Send email notification
+    console.log('API Key exists:', !!process.env.RESEND_API_KEY)
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY)
-      await resend.emails.send({
+      const emailResult = await resend.emails.send({
         from: 'Capital Qualifier <onboarding@resend.dev>',
         to: 'paul.dicesare@gmail.com',
         subject: `[${qualificationScore.toUpperCase().replace('_', ' ')}] New ${leadType === 'originator' ? 'Originator' : 'Borrower'} Lead: ${companyName}`,
         text: emailText,
       })
+      console.log('Email result:', JSON.stringify(emailResult))
     } else {
       // Log to console if no API key (for development)
-      console.log('=== NEW LEAD SUBMISSION ===')
+      console.log('=== NO API KEY - LOGGING INSTEAD ===')
       console.log(emailText)
       console.log('===========================')
     }
