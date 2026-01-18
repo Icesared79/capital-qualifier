@@ -446,6 +446,27 @@ export interface UserProfile {
 // Admin Dashboard Types
 // ============================================
 
+// Legal review status for deals
+export type LegalStatus =
+  | 'not_required'
+  | 'pending'
+  | 'assigned'
+  | 'in_review'
+  | 'approved'
+  | 'changes_required'
+  | 'rejected'
+
+// Tokenization status for deals
+export type TokenizationStatus =
+  | 'not_required'
+  | 'pending'
+  | 'assigned'
+  | 'green_lit'
+  | 'configuring'
+  | 'minting'
+  | 'ready'
+  | 'failed'
+
 // Deal with company and owner information for admin views
 export interface DealWithCompany {
   id: string
@@ -456,6 +477,19 @@ export interface DealWithCompany {
   handoff_to?: HandoffTarget | null  // Optional until migration is run
   handed_off_at?: string | null       // Optional until migration is run
   handed_off_by?: string | null       // Optional until migration is run
+  // Legal partner fields
+  legal_partner_id?: string | null
+  legal_status?: LegalStatus
+  legal_signed_off_at?: string | null
+  legal_notes?: string | null
+  legal_partner?: FundingPartner | null  // Joined data
+  // Tokenization partner fields
+  tokenization_partner_id?: string | null
+  tokenization_status?: TokenizationStatus
+  tokenization_green_lit_at?: string | null
+  tokenization_completed_at?: string | null
+  tokenization_notes?: string | null
+  tokenization_partner?: FundingPartner | null  // Joined data
   created_at: string
   updated_at: string
   stage_changed_at: string | null
@@ -510,7 +544,7 @@ export interface TeamMember {
 // PARTNER PORTAL & LEGAL TRACKING TYPES
 // ============================================
 
-// Funding Partner (organizations like Optima)
+// Partner organization type (what kind of entity)
 export type PartnerType =
   | 'institutional'
   | 'family_office'
@@ -518,6 +552,9 @@ export type PartnerType =
   | 'hedge_fund'
   | 'bank'
   | 'other'
+
+// Partner role in deal flow
+export type PartnerRole = 'funding' | 'legal' | 'tokenization'
 
 export interface FundingPartner {
   id: string
@@ -529,6 +566,7 @@ export interface FundingPartner {
   primary_contact_name?: string
   primary_contact_email?: string
   primary_contact_phone?: string
+  partner_role: PartnerRole // funding or legal
   partner_type: PartnerType
   focus_asset_classes?: string[]
   min_deal_size?: string
@@ -544,6 +582,7 @@ export interface FundingPartner {
 
 // Deal Release (tracks which deals sent to which partners)
 export type DealReleaseStatus =
+  // Funding partner statuses
   | 'pending'
   | 'viewed'
   | 'interested'
@@ -552,6 +591,11 @@ export type DealReleaseStatus =
   | 'term_sheet'
   | 'passed'
   | 'funded'
+  // Legal partner statuses
+  | 'legal_review'
+  | 'legal_approved'
+  | 'legal_changes'
+  | 'legal_rejected'
 
 export type AccessLevel = 'summary' | 'full' | 'documents'
 

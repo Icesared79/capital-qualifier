@@ -126,12 +126,22 @@ interface PartnerMatch {
   matches: boolean
 }
 
+interface LegalInfo {
+  status: string
+  partnerId: string | null
+  partnerName: string | null
+  signedOffAt: string | null
+  notes: string | null
+  availablePartners: { id: string; name: string }[]
+}
+
 interface ApplicationDashboardProps {
   data: ApplicationData
   isAdmin?: boolean
   userId?: string
   portfolioAssessment?: PortfolioAssessment | null
   partnerMatches?: PartnerMatch[]
+  legalInfo?: LegalInfo
 }
 
 // Timeline stages configuration - simplified to 4 stages
@@ -175,7 +185,7 @@ const timelineStages = [
   },
 ]
 
-export default function ApplicationDashboard({ data, isAdmin = false, userId, portfolioAssessment, partnerMatches = [] }: ApplicationDashboardProps) {
+export default function ApplicationDashboard({ data, isAdmin = false, userId, portfolioAssessment, partnerMatches = [], legalInfo }: ApplicationDashboardProps) {
   const router = useRouter()
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'details'>('overview')
@@ -278,6 +288,15 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
             releasePartner={data.releasePartner}
             releaseAuthorizedAt={data.releaseAuthorizedAt}
             hasDocumentScoring={!!hasDocumentBasedScoring}
+          />
+        )}
+
+        {/* Legal Partner Panel - Admin only */}
+        {isAdmin && legalInfo && (
+          <LegalPartnerPanel
+            dealId={data.id}
+            legalInfo={legalInfo}
+            currentStage={data.stage}
           />
         )}
 
@@ -774,6 +793,164 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Legal Partner Panel Component
+function LegalPartnerPanel({
+  dealId,
+  legalInfo,
+  currentStage
+}: {
+  dealId: string
+  legalInfo: LegalInfo
+  currentStage: string
+}) {
+  const router = useRouter()
+  const [selectedPartner, setSelectedPartner] = useState(legalInfo.partnerId || '')
+  const [isAssigning, setIsAssigning] = useState(false)
+  const [notes, setNotes] = useState(legalInfo.notes || '')
+
+  const statusColors: Record<string, { bg: string; text: string; label: string }> = {
+    not_required: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Not Required' },
+    pending: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', label: 'Pending Assignment' },
+    assigned: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Assigned' },
+    in_review: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', label: 'In Review' },
+    approved: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Approved' },
+    changes_required: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400', label: 'Changes Required' },
+    rejected: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Rejected' },
+  }
+
+  const currentStatus = statusColors[legalInfo.status] || statusColors.not_required
+
+  // Only show legal panel for deals past qualification
+  const relevantStages = ['due_diligence', 'term_sheet', 'negotiation', 'closing', 'funded']
+  if (!relevantStages.includes(currentStage) && legalInfo.status === 'not_required') {
+    return null
+  }
+
+  const handleAssignLegalPartner = async () => {
+    if (!selectedPartner) return
+
+    setIsAssigning(true)
+    try {
+      const response = await fetch(`/api/admin/deals/${dealId}/legal`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          legal_partner_id: selectedPartner,
+          legal_status: 'assigned',
+          legal_notes: notes
+        })
+      })
+
+      if (response.ok) {
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Error assigning legal partner:', error)
+    } finally {
+      setIsAssigning(false)
+    }
+  }
+
+  return (
+    <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-5 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-800/50 flex items-center justify-center">
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-bold text-gray-900 dark:text-white">Legal Partner</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Assign a legal partner for review and sign-off</p>
+          </div>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-sm font-medium ${currentStatus.bg} ${currentStatus.text}`}>
+          {currentStatus.label}
+        </span>
+      </div>
+
+      {legalInfo.partnerName ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Assigned to</p>
+              <p className="font-semibold text-gray-900 dark:text-white">{legalInfo.partnerName}</p>
+            </div>
+            {legalInfo.signedOffAt && (
+              <div className="text-right">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Signed off</p>
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                  {new Date(legalInfo.signedOffAt).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+          </div>
+          {legalInfo.notes && (
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 italic">
+              "{legalInfo.notes}"
+            </p>
+          )}
+        </div>
+      ) : legalInfo.availablePartners.length > 0 ? (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Select Legal Partner
+            </label>
+            <select
+              value={selectedPartner}
+              onChange={(e) => setSelectedPartner(e.target.value)}
+              className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Choose a legal partner...</option>
+              {legalInfo.availablePartners.map(partner => (
+                <option key={partner.id} value={partner.id}>{partner.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Notes (optional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Any special instructions for the legal partner..."
+              rows={2}
+              className="w-full px-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
+            />
+          </div>
+
+          <button
+            onClick={handleAssignLegalPartner}
+            disabled={!selectedPartner || isAssigning}
+            className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isAssigning ? 'Assigning...' : 'Assign Legal Partner'}
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+          <p className="text-gray-500 dark:text-gray-400">
+            No legal partners available. Add one in the Partner Network.
+          </p>
+          <Link
+            href="/dashboard/admin/partners"
+            className="inline-flex items-center gap-2 mt-3 text-blue-600 dark:text-blue-400 font-medium hover:underline"
+          >
+            Manage Partners
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
         </div>
       )}
     </div>

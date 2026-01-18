@@ -57,11 +57,16 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { name, slug, partner_type, website, primary_contact_email } = body
+  const { name, slug, partner_role, partner_type, website, primary_contact_email } = body
 
   // Validate required fields
   if (!name || !slug) {
     return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
+  }
+
+  // Validate partner_role
+  if (partner_role && !['funding', 'legal', 'tokenization'].includes(partner_role)) {
+    return NextResponse.json({ error: 'Invalid partner role' }, { status: 400 })
   }
 
   // Check if slug already exists
@@ -81,12 +86,13 @@ export async function POST(request: NextRequest) {
     .insert({
       name,
       slug,
+      partner_role: partner_role || 'funding',
       partner_type: partner_type || 'institutional',
       website: website || null,
       primary_contact_email: primary_contact_email || null,
       status: 'active',
       can_tokenize: false,
-      has_legal_team: false,
+      has_legal_team: partner_role === 'legal', // Legal partners have legal team by default
       provides_spv_formation: false
     })
     .select()

@@ -212,36 +212,34 @@ export default function ProfileClient({ user, profile, company }: ProfileClientP
             </div>
           </div>
 
-          {/* Business Type - THE key question */}
+          {/* Business Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Business Type <span className="text-red-500">*</span>
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              How would you describe your primary business?
-            </p>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {[
-                { value: 'originator', label: 'Loan Originator', desc: 'I originate or hold loans' },
-                { value: 'real_estate', label: 'Real Estate', desc: 'I own or develop property' },
-                { value: 'asset_backed', label: 'Asset-Backed', desc: 'Receivables, equipment, inventory' },
+                { value: 'originator', label: 'Loan Originator', desc: 'I originate or hold loans', icon: '📊' },
+                { value: 'real_estate', label: 'Real Estate', desc: 'I own or develop property', icon: '🏢' },
+                { value: 'asset_backed', label: 'Asset-Backed', desc: 'Receivables, equipment, inventory', icon: '📦' },
               ].map((type) => (
                 <button
                   key={type.value}
                   type="button"
                   onClick={() => setBusinessType(type.value)}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                     businessType === type.value
                       ? 'border-gray-900 dark:border-white bg-gray-50 dark:bg-gray-700'
                       : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
                   }`}
                 >
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{type.label}</p>
+                  <span className="text-2xl">{type.icon}</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900 dark:text-white">{type.label}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{type.desc}</p>
                   </div>
                   {businessType === type.value && (
-                    <svg className="w-5 h-5 text-gray-900 dark:text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-gray-900 dark:text-white flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   )}

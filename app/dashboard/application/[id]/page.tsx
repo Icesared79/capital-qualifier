@@ -135,6 +135,7 @@ export default async function ApplicationDetailPage({ params }: { params: { id: 
     .select(`
       id,
       name,
+      partner_role,
       partner_type,
       focus_asset_classes,
       min_deal_size,
@@ -144,13 +145,22 @@ export default async function ApplicationDetailPage({ params }: { params: { id: 
     `)
     .eq('status', 'active')
 
-  // Fetch partner preferences
-  const partnerIds = partners?.map(p => p.id) || []
-  const { data: preferences } = partnerIds.length > 0
+  // Separate funding and legal partners
+  const fundingPartners = partners?.filter(p => p.partner_role !== 'legal') || []
+  const legalPartners = partners?.filter(p => p.partner_role === 'legal') || []
+
+  // Get the assigned legal partner details if any
+  const assignedLegalPartner = deal.legal_partner_id
+    ? legalPartners.find(p => p.id === deal.legal_partner_id)
+    : null
+
+  // Fetch partner preferences (only for funding partners)
+  const fundingPartnerIds = fundingPartners?.map(p => p.id) || []
+  const { data: preferences } = fundingPartnerIds.length > 0
     ? await supabase
         .from('partner_notification_preferences')
         .select('*')
-        .in('partner_id', partnerIds)
+        .in('partner_id', fundingPartnerIds)
     : { data: [] }
 
   // Build deal object for matching
@@ -161,8 +171,8 @@ export default async function ApplicationDetailPage({ params }: { params: { id: 
     overall_score: offeringData.overallScore,
   }
 
-  // Compute partner matches
-  const partnerMatches = (partners || []).map(partner => {
+  // Compute partner matches (only funding partners)
+  const partnerMatches = fundingPartners.map(partner => {
     const partnerPrefs = preferences?.find(p => p.partner_id === partner.id) || null
     const matchInfo = checkDealMatch(partnerPrefs, dealForMatching)
 
@@ -175,5 +185,15 @@ export default async function ApplicationDetailPage({ params }: { params: { id: 
     }
   }).filter(p => p.matches)
 
-  return <ApplicationDashboard data={offeringData} isAdmin={isAdmin} userId={user.id} portfolioAssessment={portfolioAssessment} partnerMatches={partnerMatches} />
+  // Legal partner info for the dashboard
+  const legalInfo = {
+    status: deal.legal_status || 'not_required',
+    partnerId: deal.legal_partner_id || null,
+    partnerName: assignedLegalPartner?.name || null,
+    signedOffAt: deal.legal_signed_off_at || null,
+    notes: deal.legal_notes || null,
+    availablePartners: legalPartners.map(p => ({ id: p.id, name: p.name })),
+  }
+
+  return <ApplicationDashboard data={offeringData} isAdmin={isAdmin} userId={user.id} portfolioAssessment={portfolioAssessment} partnerMatches={partnerMatches} legalInfo={legalInfo} />
 }

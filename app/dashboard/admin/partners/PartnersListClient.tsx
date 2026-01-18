@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { FundingPartner } from '@/lib/types'
+import { FundingPartner, PartnerRole } from '@/lib/types'
 import {
   Building2,
   Plus,
@@ -24,7 +24,10 @@ import {
   Shield,
   CheckCircle2,
   XCircle,
-  Clock
+  Clock,
+  Banknote,
+  Gavel,
+  Coins
 } from 'lucide-react'
 
 interface PartnersListClientProps {
@@ -50,14 +53,21 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bgColor: str
 export default function PartnersListClient({ partners, partnerStats }: PartnersListClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'pending'>('all')
+  const [roleFilter, setRoleFilter] = useState<'all' | PartnerRole>('all')
 
   const filteredPartners = partners.filter(partner => {
     const matchesSearch = partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       partner.slug.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = filter === 'all' || partner.status === filter
-    return matchesSearch && matchesFilter
+    const matchesStatus = statusFilter === 'all' || partner.status === statusFilter
+    const matchesRole = roleFilter === 'all' || partner.partner_role === roleFilter
+    return matchesSearch && matchesStatus && matchesRole
   })
+
+  // Count by role
+  const fundingCount = partners.filter(p => p.partner_role === 'funding' || !p.partner_role).length
+  const legalCount = partners.filter(p => p.partner_role === 'legal').length
+  const tokenizationCount = partners.filter(p => p.partner_role === 'tokenization').length
 
   // Calculate totals
   const totalDeals = Object.values(partnerStats).reduce((sum, s) => sum + s.total, 0)
@@ -76,10 +86,10 @@ export default function PartnersListClient({ partners, partnerStats }: PartnersL
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Funding Partners
+              Partner Network
             </h1>
             <p className="text-base text-gray-600 dark:text-gray-400 mt-1">
-              {partners.length} partners · {totalDeals} deals released · {totalFunded} funded
+              {fundingCount} funding · {tokenizationCount} tokenization · {legalCount} legal
             </p>
           </div>
         </div>
@@ -143,7 +153,54 @@ export default function PartnersListClient({ partners, partnerStats }: PartnersL
         </div>
       </div>
 
-      {/* Search and Filter */}
+      {/* Role Filter Tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setRoleFilter('all')}
+          className={`px-5 py-2.5 rounded-xl font-semibold transition-all ${
+            roleFilter === 'all'
+              ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+          }`}
+        >
+          All Partners
+        </button>
+        <button
+          onClick={() => setRoleFilter('funding')}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+            roleFilter === 'funding'
+              ? 'bg-emerald-600 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <Banknote className="w-4 h-4" />
+          Funding ({fundingCount})
+        </button>
+        <button
+          onClick={() => setRoleFilter('tokenization')}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+            roleFilter === 'tokenization'
+              ? 'bg-purple-600 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <Coins className="w-4 h-4" />
+          Tokenization ({tokenizationCount})
+        </button>
+        <button
+          onClick={() => setRoleFilter('legal')}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+            roleFilter === 'legal'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <Gavel className="w-4 h-4" />
+          Legal ({legalCount})
+        </button>
+      </div>
+
+      {/* Search and Status Filter */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -159,9 +216,9 @@ export default function PartnersListClient({ partners, partnerStats }: PartnersL
           {(['all', 'active', 'inactive', 'pending'] as const).map(status => (
             <button
               key={status}
-              onClick={() => setFilter(status)}
+              onClick={() => setStatusFilter(status)}
               className={`px-4 py-2.5 rounded-xl font-medium transition-colors ${
-                filter === status
+                statusFilter === status
                   ? 'bg-purple-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
@@ -181,7 +238,7 @@ export default function PartnersListClient({ partners, partnerStats }: PartnersL
               {searchQuery ? 'No partners found' : 'No partners yet'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              {searchQuery ? 'Try a different search term' : 'Add your first funding partner to get started'}
+              {searchQuery ? 'Try a different search term' : 'Add funding or legal partners to your network'}
             </p>
             {!searchQuery && (
               <button
@@ -221,10 +278,23 @@ export default function PartnersListClient({ partners, partnerStats }: PartnersL
                         <h3 className="font-bold text-gray-900 dark:text-white truncate">
                           {partner.name}
                         </h3>
-                        <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 rounded-full">
-                          <BadgeCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                          <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Verified</span>
-                        </div>
+                        {/* Role Badge */}
+                        {partner.partner_role === 'legal' ? (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                            <Gavel className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span className="text-xs font-medium text-blue-700 dark:text-blue-300">Legal</span>
+                          </div>
+                        ) : partner.partner_role === 'tokenization' ? (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 rounded-full">
+                            <Coins className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Tokenization</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                            <Banknote className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">Funding</span>
+                          </div>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                         {PARTNER_TYPE_LABELS[partner.partner_type] || partner.partner_type}
@@ -332,6 +402,7 @@ function AddPartnerModal({ onClose }: { onClose: () => void }) {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
+    partner_role: 'funding' as PartnerRole,
     partner_type: 'institutional',
     website: '',
     primary_contact_email: ''
@@ -374,7 +445,7 @@ function AddPartnerModal({ onClose }: { onClose: () => void }) {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add New Partner</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Create a new funding partner account
+            Add a funding or legal partner to your network
           </p>
         </div>
 
@@ -384,6 +455,66 @@ function AddPartnerModal({ onClose }: { onClose: () => void }) {
               {error}
             </div>
           )}
+
+          {/* Partner Role Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Partner Role *
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, partner_role: 'funding' }))}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-center transition-all ${
+                  formData.partner_role === 'funding'
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <Banknote className={`w-5 h-5 ${formData.partner_role === 'funding' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                <div>
+                  <p className={`font-semibold text-sm ${formData.partner_role === 'funding' ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
+                    Funding
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Capital</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, partner_role: 'tokenization' }))}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-center transition-all ${
+                  formData.partner_role === 'tokenization'
+                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <Coins className={`w-5 h-5 ${formData.partner_role === 'tokenization' ? 'text-purple-600' : 'text-gray-400'}`} />
+                <div>
+                  <p className={`font-semibold text-sm ${formData.partner_role === 'tokenization' ? 'text-purple-700 dark:text-purple-400' : 'text-gray-900 dark:text-white'}`}>
+                    Tokenization
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Issuance</p>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, partner_role: 'legal' }))}
+                className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 text-center transition-all ${
+                  formData.partner_role === 'legal'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <Gavel className={`w-5 h-5 ${formData.partner_role === 'legal' ? 'text-blue-600' : 'text-gray-400'}`} />
+                <div>
+                  <p className={`font-semibold text-sm ${formData.partner_role === 'legal' ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-white'}`}>
+                    Legal
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Sign-off</p>
+                </div>
+              </button>
+            </div>
+          </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
