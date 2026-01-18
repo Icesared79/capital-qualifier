@@ -3,7 +3,7 @@
 import { ButtonHTMLAttributes, forwardRef } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   fullWidth?: boolean
 }
@@ -13,8 +13,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
 
     const variants = {
-      primary: 'bg-[#2C2C2C] text-white hover:bg-[#3A3A3A] active:bg-[#1A1A1A]',
+      primary: 'bg-text-primary text-background hover:opacity-80 active:opacity-90',
       secondary: 'border border-border text-text-primary hover:border-accent hover:text-accent bg-surface',
+      outline: 'border-2 border-accent text-accent hover:bg-accent hover:text-white bg-transparent',
       ghost: 'text-text-secondary hover:text-accent',
     }
 
