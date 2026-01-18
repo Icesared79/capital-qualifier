@@ -6,6 +6,7 @@ interface DealActionRequest {
   action: PartnerDealAction
   notes?: string
   passReason?: string
+  legalPartnerId?: string
 }
 
 // POST: Take action on a deal (express interest, pass, start due diligence)
@@ -72,7 +73,7 @@ export async function POST(
     }
 
     const body: DealActionRequest = await request.json()
-    const { action, notes, passReason } = body
+    const { action, notes, passReason, legalPartnerId } = body
 
     if (!action) {
       return NextResponse.json(
@@ -118,6 +119,95 @@ export async function POST(
           updateData.partner_notes = notes
         }
         break
+
+      case 'assign_legal':
+        // Only allow assigning legal if partner has expressed interest
+        if (!['interested', 'reviewing', 'due_diligence'].includes(release.status)) {
+          return NextResponse.json(
+            { error: 'Must express interest before assigning legal partner' },
+            { status: 400 }
+          )
+        }
+
+        if (!legalPartnerId) {
+          return NextResponse.json(
+            { error: 'Legal partner ID is required' },
+            { status: 400 }
+          )
+        }
+
+        // Verify legal partner exists and is a legal role partner
+        const { data: legalPartner, error: legalPartnerError } = await supabase
+          .from('funding_partners')
+          .select('id, name, partner_role')
+          .eq('id', legalPartnerId)
+          .eq('partner_role', 'legal')
+          .eq('status', 'active')
+          .single()
+
+        if (legalPartnerError || !legalPartner) {
+          return NextResponse.json(
+            { error: 'Legal partner not found' },
+            { status: 404 }
+          )
+        }
+
+        // Assign legal partner to the deal
+        const { error: assignError } = await adminClient
+          .from('deals')
+          .update({
+            legal_partner_id: legalPartnerId,
+            legal_status: 'assigned',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', dealId)
+
+        if (assignError) {
+          console.error('Error assigning legal partner:', assignError)
+          return NextResponse.json(
+            { error: 'Failed to assign legal partner' },
+            { status: 500 }
+          )
+        }
+
+        // Release the deal to the legal partner
+        await adminClient
+          .from('deal_releases')
+          .upsert({
+            deal_id: dealId,
+            partner_id: legalPartnerId,
+            released_by: user.id,
+            released_at: new Date().toISOString(),
+            access_level: 'full',
+            status: 'legal_review',
+            release_notes: `Assigned by ${partner.name}`
+          }, {
+            onConflict: 'deal_id,partner_id'
+          })
+
+        // Log the action
+        await adminClient
+          .from('partner_access_logs')
+          .insert({
+            partner_id: partner.id,
+            deal_id: dealId,
+            user_id: user.id,
+            action: 'expressed_interest',
+            details: {
+              type: 'assigned_legal',
+              legal_partner_id: legalPartnerId,
+              legal_partner_name: legalPartner.name
+            }
+          })
+
+        return NextResponse.json({
+          success: true,
+          message: `Legal partner ${legalPartner.name} has been assigned to this deal.`,
+          legalPartner: {
+            id: legalPartner.id,
+            name: legalPartner.name
+          }
+        })
 
       default:
         return NextResponse.json(
@@ -201,6 +291,8 @@ function getActionMessage(action: PartnerDealAction): string {
       return 'Due diligence started. You now have access to all documents.'
     case 'add_note':
       return 'Note added successfully.'
+    case 'assign_legal':
+      return 'Legal partner assigned successfully.'
     default:
       return 'Action completed.'
   }

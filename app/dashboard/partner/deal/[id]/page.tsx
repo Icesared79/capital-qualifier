@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatCapitalAmount } from '@/lib/formatters'
+import TermsModal from '@/components/legal/TermsModal'
 import {
   ArrowLeft,
   Building2,
@@ -27,7 +28,8 @@ import {
   Calendar,
   Globe,
   Shield,
-  ArrowRight
+  ArrowRight,
+  Scale
 } from 'lucide-react'
 
 interface DealRelease {
@@ -56,6 +58,7 @@ interface Deal {
   next_steps: string[] | null
   capital_fits: any[] | null
   recommended_structure: string | null
+  legal_partner_id: string | null
   company: {
     id: string
     name: string
@@ -83,8 +86,16 @@ export default function PartnerDealPage() {
   const [partnerId, setPartnerId] = useState<string | null>(null)
   const [showInterestModal, setShowInterestModal] = useState(false)
   const [showPassModal, setShowPassModal] = useState(false)
+  const [showLegalModal, setShowLegalModal] = useState(false)
   const [passReason, setPassReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [legalPartners, setLegalPartners] = useState<{ id: string; name: string }[]>([])
+  const [selectedLegalPartner, setSelectedLegalPartner] = useState('')
+  const [dealLegalPartner, setDealLegalPartner] = useState<{ id: string; name: string } | null>(null)
+
+  // Deal confidentiality terms state
+  const [showConfidentialityModal, setShowConfidentialityModal] = useState(false)
+  const [confidentialityAccepted, setConfidentialityAccepted] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -178,6 +189,7 @@ export default function PartnerDealPage() {
         next_steps,
         capital_fits,
         recommended_structure,
+        legal_partner_id,
         company:companies (
           id,
           name,
@@ -193,9 +205,51 @@ export default function PartnerDealPage() {
       console.error('Error fetching deal:', dealError)
     } else {
       setDeal(dealData as Deal)
+
+      // If deal has a legal partner, get their info
+      if (dealData.legal_partner_id) {
+        const { data: legalPartnerData } = await supabase
+          .from('funding_partners')
+          .select('id, name')
+          .eq('id', dealData.legal_partner_id)
+          .single()
+
+        if (legalPartnerData) {
+          setDealLegalPartner(legalPartnerData)
+        }
+      }
+    }
+
+    // Fetch available legal partners
+    const { data: legalPartnersData } = await supabase
+      .from('funding_partners')
+      .select('id, name')
+      .eq('partner_role', 'legal')
+      .eq('status', 'active')
+      .order('name')
+
+    if (legalPartnersData) {
+      setLegalPartners(legalPartnersData)
     }
 
     setLoading(false)
+  }
+
+  // Handle express interest button - show confidentiality modal first
+  function handleExpressInterestClick() {
+    if (confidentialityAccepted) {
+      handleExpressInterestClick()
+    } else {
+      setShowConfidentialityModal(true)
+    }
+  }
+
+  // Called after user accepts confidentiality terms
+  function handleConfidentialityAccepted() {
+    setConfidentialityAccepted(true)
+    setShowConfidentialityModal(false)
+    // Now show the interest modal
+    handleExpressInterestClick()
   }
 
   async function expressInterest() {
@@ -261,6 +315,40 @@ export default function PartnerDealPage() {
 
     // Go back to list
     router.push('/dashboard/partner')
+  }
+
+  async function assignLegalPartner() {
+    if (!release || !partnerId || !selectedLegalPartner) return
+
+    setActionLoading(true)
+
+    try {
+      const response = await fetch(`/api/partner/deal/${dealId}/action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'assign_legal',
+          legalPartnerId: selectedLegalPartner
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setDealLegalPartner(data.legalPartner)
+        setShowLegalModal(false)
+        setSelectedLegalPartner('')
+        // Reload to get updated data
+        loadData()
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to assign legal partner')
+      }
+    } catch (err) {
+      console.error('Error assigning legal partner:', err)
+      alert('Failed to assign legal partner')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   if (loading) {
@@ -338,7 +426,7 @@ export default function PartnerDealPage() {
                 You're viewing a summary of this deal. Express interest to unlock the full package including detailed portfolio metrics, documents, and contact information.
               </p>
               <button
-                onClick={() => setShowInterestModal(true)}
+                onClick={() => handleExpressInterestClick()}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors"
               >
                 <Unlock className="w-5 h-5" />
@@ -549,7 +637,7 @@ export default function PartnerDealPage() {
                   Express interest to unlock detailed portfolio metrics, risk considerations, documents, and contact information.
                 </p>
                 <button
-                  onClick={() => setShowInterestModal(true)}
+                  onClick={() => handleExpressInterestClick()}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors"
                 >
                   <Unlock className="w-5 h-5" />
@@ -571,7 +659,7 @@ export default function PartnerDealPage() {
               <div className="space-y-3">
                 {!hasFullAccess ? (
                   <button
-                    onClick={() => setShowInterestModal(true)}
+                    onClick={() => handleExpressInterestClick()}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent hover:bg-accent/90 text-white font-bold rounded-xl transition-colors"
                   >
                     <ThumbsUp className="w-5 h-5" />
@@ -591,6 +679,27 @@ export default function PartnerDealPage() {
                       <Download className="w-5 h-5" />
                       Download Package
                     </button>
+                    {/* Assign Legal Partner Button */}
+                    {legalPartners.length > 0 && !dealLegalPartner && (
+                      <button
+                        onClick={() => setShowLegalModal(true)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+                      >
+                        <Scale className="w-5 h-5" />
+                        Assign Legal Partner
+                      </button>
+                    )}
+                    {dealLegalPartner && (
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                          <Scale className="w-4 h-4" />
+                          <span className="text-sm font-medium">Legal Partner Assigned</span>
+                        </div>
+                        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300 font-semibold">
+                          {dealLegalPartner.name}
+                        </p>
+                      </div>
+                    )}
                   </>
                 )}
                 <button
@@ -816,6 +925,74 @@ export default function PartnerDealPage() {
           </div>
         </div>
       )}
+
+      {/* Assign Legal Partner Modal */}
+      {showLegalModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center">
+                <Scale className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Assign Legal Partner
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Select a legal partner for documentation
+                </p>
+              </div>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              The legal partner will handle SPV formation, securities compliance, and deal documentation.
+            </p>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Legal Partner
+              </label>
+              <select
+                value={selectedLegalPartner}
+                onChange={(e) => setSelectedLegalPartner(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Choose a legal partner...</option>
+                {legalPartners.map(partner => (
+                  <option key={partner.id} value={partner.id}>{partner.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowLegalModal(false)
+                  setSelectedLegalPartner('')
+                }}
+                className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:border-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={assignLegalPartner}
+                disabled={actionLoading || !selectedLegalPartner}
+                className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? 'Assigning...' : 'Assign Partner'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deal Confidentiality Modal - shown before expressing interest */}
+      <TermsModal
+        documentType="deal_confidentiality"
+        contextType="deal_interest"
+        contextEntityId={dealId}
+        isOpen={showConfidentialityModal}
+        onClose={() => setShowConfidentialityModal(false)}
+        onAccept={handleConfidentialityAccepted}
+        blocking={false}
+      />
     </div>
   )
 }

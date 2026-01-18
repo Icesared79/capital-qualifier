@@ -312,6 +312,62 @@ export async function GET() {
   })
 }
 
-export async function POST() {
-  return GET()
+export async function POST(request: Request) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  if (!serviceRoleKey) {
+    return NextResponse.json(
+      { error: 'Service role key not configured' },
+      { status: 500 }
+    )
+  }
+
+  try {
+    const { sql } = await request.json()
+
+    if (!sql) {
+      return NextResponse.json(
+        { error: 'SQL is required' },
+        { status: 400 }
+      )
+    }
+
+    // Execute SQL using Supabase's SQL endpoint
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/exec_sql`, {
+      method: 'POST',
+      headers: {
+        'apikey': serviceRoleKey,
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sql })
+    })
+
+    if (!response.ok) {
+      // If exec_sql doesn't exist, try using the pg_query function or return instructions
+      const errorText = await response.text()
+
+      // Check if it's a function not found error
+      if (errorText.includes('function') || errorText.includes('does not exist')) {
+        return NextResponse.json({
+          error: 'SQL execution function not available. Please run the SQL manually in Supabase SQL Editor.',
+          sqlEditorUrl: `${supabaseUrl.replace('.supabase.co', '')}/sql/new`,
+          sql: sql
+        }, { status: 400 })
+      }
+
+      return NextResponse.json(
+        { error: `SQL execution failed: ${errorText}` },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Failed to execute migration' },
+      { status: 500 }
+    )
+  }
 }

@@ -7,6 +7,7 @@ import { DealWithCompany, TeamMember, FundingApplicationStage, HandoffTarget } f
 interface DealsPageProps {
   searchParams: {
     stage?: string
+    stages?: string  // comma-separated list of stages
     handoff_to?: string
     search?: string
     page?: string
@@ -35,8 +36,9 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
     redirect('/dashboard')
   }
 
-  // Parse filters
+  // Parse filters - support both single stage and comma-separated stages
   const stageFilter = searchParams.stage as FundingApplicationStage | undefined
+  const stagesFilter = searchParams.stages?.split(',').filter(Boolean) as FundingApplicationStage[] | undefined
   const handoffFilter = searchParams.handoff_to as HandoffTarget | undefined
   const searchQuery = searchParams.search || ''
   const page = parseInt(searchParams.page || '1', 10)
@@ -68,8 +70,10 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
       )
     `, { count: 'exact' })
 
-  // Apply filters
-  if (stageFilter) {
+  // Apply filters - stages (plural) takes precedence over stage (singular)
+  if (stagesFilter && stagesFilter.length > 0) {
+    query = query.in('stage', stagesFilter)
+  } else if (stageFilter) {
     query = query.eq('stage', stageFilter)
   }
 
@@ -158,6 +162,7 @@ export default async function DealsPage({ searchParams }: DealsPageProps) {
       <DealFilters
         stages={stages}
         currentStage={stageFilter}
+        currentStages={searchParams.stages}
         currentHandoff={handoffFilter}
         currentSearch={searchQuery}
       />

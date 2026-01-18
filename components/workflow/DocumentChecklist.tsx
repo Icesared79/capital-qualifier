@@ -452,14 +452,14 @@ export default function DocumentChecklist({
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Document Checklist</h3>
             {dealAssetType && (
-              <span className="text-sm px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg">
+              <span className="text-sm px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg">
                 {getAssetTypeLabel([dealAssetType]) || dealAssetType}
               </span>
             )}
           </div>
           <Link
             href={`/dashboard/documents?deal=${dealId}`}
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="text-sm font-medium text-teal-600 hover:text-teal-700 dark:text-teal-400"
           >
             View All
           </Link>
@@ -501,6 +501,39 @@ export default function DocumentChecklist({
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
+                  {/* Category Icon */}
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                    {category.category === 'financials' && (
+                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                    {category.category === 'loan_tape' && (
+                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
+                    {category.category === 'legal' && (
+                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                      </svg>
+                    )}
+                    {category.category === 'corporate' && (
+                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    )}
+                    {category.category === 'due_diligence' && (
+                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    )}
+                    {category.category === 'other' && (
+                      <svg className="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                      </svg>
+                    )}
+                  </div>
                   <span className="text-base font-medium text-gray-900 dark:text-white">
                     {category.label}
                   </span>
@@ -530,19 +563,19 @@ export default function DocumentChecklist({
                       <div
                         key={item.id}
                         className={`flex items-start gap-3 p-3 rounded-lg ${
-                          isDone ? 'bg-green-50 dark:bg-green-900/20' :
-                          isUploaded ? 'bg-amber-50 dark:bg-amber-900/20' :
+                          isDone ? 'bg-gray-50 dark:bg-gray-700/50' :
+                          isUploaded ? 'bg-teal-50 dark:bg-teal-900/20' :
                           'bg-gray-50 dark:bg-gray-700/50'
                         }`}
                       >
                         {/* Status Icon */}
                         <div className="flex-shrink-0 mt-0.5">
                           {isDone ? (
-                            <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           ) : isUploaded ? (
-                            <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           ) : (
@@ -554,8 +587,8 @@ export default function DocumentChecklist({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`text-sm font-medium ${
-                              isDone ? 'text-green-700 dark:text-green-400' :
-                              isUploaded ? 'text-amber-700 dark:text-amber-400' :
+                              isDone ? 'text-gray-600 dark:text-gray-400' :
+                              isUploaded ? 'text-teal-700 dark:text-teal-400' :
                               'text-gray-900 dark:text-white'
                             }`}>
                               {item.name}
@@ -566,7 +599,7 @@ export default function DocumentChecklist({
                               </span>
                             )}
                             {!item.isCore && item.assetTypes && (
-                              <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
+                              <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
                                 {getAssetTypeLabel(item.assetTypes)}
                               </span>
                             )}
@@ -586,7 +619,7 @@ export default function DocumentChecklist({
                         {/* Actions */}
                         <div className="flex-shrink-0">
                           {isUploaded && (
-                            <span className="text-xs font-medium px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded">
+                            <span className="text-xs font-medium px-2 py-1 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded">
                               In Review
                             </span>
                           )}
@@ -601,7 +634,7 @@ export default function DocumentChecklist({
                           {isAdmin && isWaived && (
                             <button
                               onClick={() => handleUnwaive(item.id)}
-                              className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                              className="text-xs text-teal-600 hover:text-teal-700 dark:text-teal-400"
                             >
                               Restore
                             </button>

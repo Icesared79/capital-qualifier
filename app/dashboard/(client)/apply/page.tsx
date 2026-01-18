@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import Button from '@/components/ui/Button'
 import SelectCard from '@/components/ui/SelectCard'
 import { scoreOriginatorAdvanced } from '@/lib/scoring'
+import TermsModal from '@/components/legal/TermsModal'
+import TermsCheckbox from '@/components/legal/TermsCheckbox'
 
 // Step titles for progress display
 const stepTitles = [
@@ -164,6 +166,12 @@ function ApplyPageContent() {
   const [monthlyVolume, setMonthlyVolume] = useState('')
   const [geographicFocus, setGeographicFocus] = useState('')
 
+  // Terms and legal
+  const [isFirstOffering, setIsFirstOffering] = useState(false)
+  const [showOriginatorAgreement, setShowOriginatorAgreement] = useState(false)
+  const [originatorAgreementAccepted, setOriginatorAgreementAccepted] = useState(false)
+  const [certificationChecked, setCertificationChecked] = useState(false)
+
   // Handle funding amount input change
   const handleFundingAmountChange = (value: string) => {
     // Format the input with $ and commas as user types
@@ -242,6 +250,33 @@ function ApplyPageContent() {
     if (companies && companies.length > 0) {
       const company = companies[0]
       setCompanyId(company.id)
+
+      // Check if this is the first offering (no existing deals besides the one being edited)
+      const existingDeals = company.deals || []
+      const otherDeals = dealId
+        ? existingDeals.filter((d: any) => d.id !== dealId)
+        : existingDeals
+      const firstOffering = otherDeals.length === 0
+
+      setIsFirstOffering(firstOffering)
+
+      // If first offering, check if user has already accepted originator agreement
+      if (firstOffering) {
+        const { data: acceptance } = await supabase
+          .from('terms_acknowledgements')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('context_type', 'first_offering')
+          .limit(1)
+          .maybeSingle()
+
+        if (!acceptance) {
+          // Need to show originator agreement modal
+          setShowOriginatorAgreement(true)
+        } else {
+          setOriginatorAgreementAccepted(true)
+        }
+      }
 
       // Load profile data
       const qData = company.qualification_data || {}
@@ -356,6 +391,9 @@ function ApplyPageContent() {
         break
 
       case 3: // Review
+        if (!certificationChecked) {
+          newErrors.certification = 'You must certify the accuracy of your submission'
+        }
         break
     }
 
@@ -462,6 +500,24 @@ function ApplyPageContent() {
     }
 
     setSaving(false)
+
+    // Record offering certification acknowledgement
+    if (certificationChecked && dealIdToRedirect) {
+      try {
+        await fetch('/api/terms/offering_certification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            context_type: 'offering_submission',
+            context_entity_id: dealIdToRedirect,
+            checkbox_confirmed: true,
+            scrolled_to_bottom: true,
+          }),
+        })
+      } catch (e) {
+        console.error('Failed to record certification:', e)
+      }
+    }
 
     // Redirect directly to the application detail page
     if (dealIdToRedirect) {
@@ -906,19 +962,38 @@ function ApplyPageContent() {
                 </div>
               </div>
 
-              <div className="bg-green-50 rounded-lg p-4 border border-green-100">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-green-800">Ready to submit</p>
-                    <p className="text-sm text-green-600">
-                      We'll analyze your profile and match you with suitable capital options.
-                    </p>
+              {/* Offering Certification */}
+              <div className="bg-amber-50 rounded-lg p-4 border border-amber-100">
+                <h3 className="text-sm font-semibold text-amber-800 mb-3">Offering Certification</h3>
+                <TermsCheckbox
+                  documentType="offering_certification"
+                  contextType="offering_submission"
+                  checked={certificationChecked}
+                  onChange={setCertificationChecked}
+                  label="I certify that all information provided is accurate, complete, and not misleading. I have the authority to submit this application. View full"
+                  linkText="Offering Certification"
+                  required
+                />
+                {errors.certification && (
+                  <p className="text-sm text-red-500 mt-2">{errors.certification}</p>
+                )}
+              </div>
+
+              {certificationChecked && (
+                <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-green-800">Ready to submit</p>
+                      <p className="text-sm text-green-600">
+                        We'll analyze your profile and match you with suitable capital options.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -930,7 +1005,7 @@ function ApplyPageContent() {
               </Button>
             )}
             {hasProfile ? (
-              <Button fullWidth onClick={handleNext} disabled={saving}>
+              <Button fullWidth onClick={handleNext} disabled={saving || (isFirstOffering && !originatorAgreementAccepted)}>
                 {saving ? 'Submitting...' : step === 3 ? 'Submit Offering' : 'Continue'}
               </Button>
             ) : (
@@ -943,6 +1018,23 @@ function ApplyPageContent() {
           </div>
         </div>
       </main>
+
+      {/* Originator Agreement Modal - shown for first offering */}
+      {showOriginatorAgreement && (
+        <TermsModal
+          documentType="originator_agreement"
+          contextType="first_offering"
+          isOpen={showOriginatorAgreement}
+          onClose={() => {
+            // Allow closing but they can't proceed without accepting
+          }}
+          onAccept={() => {
+            setOriginatorAgreementAccepted(true)
+            setShowOriginatorAgreement(false)
+          }}
+          blocking={true}
+        />
+      )}
     </div>
   )
 }

@@ -6,9 +6,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import CapitalFitCard from '@/components/ui/CapitalFitCard'
 import Button from '@/components/ui/Button'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
-import NotificationBell from '@/components/ui/NotificationBell'
 import AdminControlsPanel from '@/components/workflow/AdminControlsPanel'
+import DealManagementPanel from '@/components/workflow/DealManagementPanel'
 import DocumentChecklist from '@/components/workflow/DocumentChecklist'
 import ActionItemsBanner from '@/components/workflow/ActionItemsBanner'
 import { FundingApplicationStage } from '@/lib/types'
@@ -16,6 +15,7 @@ import { ScoreResultsCard } from '@/components/scoring'
 import { ScoreHistoryChart } from '@/components/scoring/ScoreHistoryChart'
 import { formatCapitalAmount } from '@/lib/formatters'
 import CapitalAlignment from '@/components/ui/CapitalAlignment'
+import DealLegalFees from '@/components/legal/DealLegalFees'
 
 const fundingPurposeLabels: Record<string, string> = {
   working_capital: 'Working Capital / Growth',
@@ -42,17 +42,17 @@ const assetLabels: Record<string, string> = {
 }
 
 const stageConfig: Record<string, { label: string; color: string; description: string }> = {
-  draft: { label: 'In Progress', color: 'bg-amber-100 text-amber-700', description: 'Your offering is being prepared.' },
-  qualified: { label: 'Submitted', color: 'bg-blue-100 text-blue-700', description: 'Your offering has been submitted. Our team will review it and may request additional documents.' },
-  documents_requested: { label: 'Documents Needed', color: 'bg-blue-100 text-blue-700', description: 'Please upload the requested documents to proceed.' },
-  documents_in_review: { label: 'Documents Under Review', color: 'bg-blue-100 text-blue-700', description: 'Our team is reviewing your documents.' },
-  due_diligence: { label: 'Due Diligence', color: 'bg-purple-100 text-purple-700', description: 'Your offering is in the due diligence phase.' },
-  term_sheet: { label: 'Term Sheet', color: 'bg-purple-100 text-purple-700', description: 'A term sheet is being prepared for your review.' },
-  negotiation: { label: 'Negotiation', color: 'bg-purple-100 text-purple-700', description: 'Terms are being negotiated.' },
-  closing: { label: 'Closing', color: 'bg-green-100 text-green-700', description: 'Your funding is in the closing process.' },
-  funded: { label: 'Funded', color: 'bg-green-100 text-green-700', description: 'Congratulations! Your funding has been completed.' },
-  declined: { label: 'Declined', color: 'bg-red-100 text-red-700', description: 'Unfortunately, this offering was not approved.' },
-  withdrawn: { label: 'Withdrawn', color: 'bg-gray-100 text-gray-600', description: 'This offering has been withdrawn.' },
+  draft: { label: 'In Progress', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', description: 'Your offering is being prepared.' },
+  qualified: { label: 'Submitted', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'Your offering has been submitted. Our team will review it and may request additional documents.' },
+  documents_requested: { label: 'Documents Needed', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'Please upload the requested documents to proceed.' },
+  documents_in_review: { label: 'Documents Under Review', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'Our team is reviewing your documents.' },
+  due_diligence: { label: 'Due Diligence', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'Your offering is in the due diligence phase.' },
+  term_sheet: { label: 'Term Sheet', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'A term sheet is being prepared for your review.' },
+  negotiation: { label: 'Negotiation', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'Terms are being negotiated.' },
+  closing: { label: 'Closing', color: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400', description: 'Your funding is in the closing process.' },
+  funded: { label: 'Funded', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', description: 'Congratulations! Your funding has been completed.' },
+  declined: { label: 'Declined', color: 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400', description: 'Unfortunately, this offering was not approved.' },
+  withdrawn: { label: 'Withdrawn', color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400', description: 'This offering has been withdrawn.' },
 }
 
 
@@ -152,7 +152,7 @@ const timelineStages = [
     shortLabel: 'Submitted',
     description: 'Application received and under review',
     owner: 'BitCense',
-    ownerColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    ownerColor: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
     // Maps these backend stages to this timeline stage
     includesStages: ['qualified', 'documents_requested', 'documents_in_review']
   },
@@ -162,7 +162,7 @@ const timelineStages = [
     shortLabel: 'Review',
     description: 'Documents and due diligence in progress',
     owner: 'BitCense',
-    ownerColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    ownerColor: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
     includesStages: ['due_diligence', 'term_sheet', 'negotiation']
   },
   {
@@ -171,7 +171,7 @@ const timelineStages = [
     shortLabel: 'Closing',
     description: 'Finalizing terms and paperwork',
     owner: 'Legal',
-    ownerColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+    ownerColor: 'bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
     includesStages: ['closing']
   },
   {
@@ -180,7 +180,7 @@ const timelineStages = [
     shortLabel: 'Funded',
     description: 'Funding complete',
     owner: 'Complete',
-    ownerColor: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    ownerColor: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
     includesStages: ['funded']
   },
 ]
@@ -196,7 +196,32 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
   const currentStageIndex = timelineStages.findIndex(s => s.includesStages?.includes(data.stage))
   const isTerminalState = data.stage === 'declined' || data.stage === 'withdrawn'
 
-  // Delete offering handler
+  // Withdraw offering handler (for clients - changes status, keeps record)
+  const handleWithdrawOffering = async () => {
+    setIsDeleting(true)
+    try {
+      const response = await fetch('/api/workflow/advance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealId: data.id, newStage: 'withdrawn' })
+      })
+      if (response.ok) {
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        alert('Failed to withdraw application. Please try again.')
+        setIsDeleting(false)
+        setShowDeleteModal(false)
+      }
+    } catch (err) {
+      console.error('Error withdrawing offering:', err)
+      alert('Failed to withdraw application. Please try again.')
+      setIsDeleting(false)
+      setShowDeleteModal(false)
+    }
+  }
+
+  // Delete offering handler (for admins - permanent removal)
   const handleDeleteOffering = async () => {
     setIsDeleting(true)
     try {
@@ -224,50 +249,7 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
   const hasDocumentBasedScoring = portfolioAssessment && portfolioAssessment.status === 'complete' && portfolioAssessment.overallScore
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header - Clean & Corporate */}
-      <header className="bg-white dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Left: Logo */}
-            <Link href="/" className="flex items-center">
-              <img src="/logo.svg" alt="BitCense" className="h-8 dark:invert" />
-            </Link>
-
-            {/* Right: Nav + Actions */}
-            <div className="flex items-center gap-8">
-              <nav className="hidden md:flex items-center gap-8">
-                <Link href="/dashboard" className="text-base font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  Dashboard
-                </Link>
-                <Link href="/dashboard/profile" className="text-base font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  Profile
-                </Link>
-                <Link href="/dashboard/documents" className="text-base font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
-                  Documents
-                </Link>
-              </nav>
-              <div className="flex items-center gap-4">
-                {userId && <NotificationBell userId={userId} />}
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-6 py-10">
-        {/* Back Link */}
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white mb-8 transition-colors text-base font-medium"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Dashboard
-        </Link>
-
+    <div className="max-w-5xl mx-auto">
         {/* Action Items Banner - only for non-admins */}
         {!isAdmin && (
           <ActionItemsBanner
@@ -277,31 +259,11 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
           />
         )}
 
-        {/* Admin Controls Panel */}
-        {isAdmin && (
-          <AdminControlsPanel
-            dealId={data.id}
-            currentStage={data.stage as FundingApplicationStage}
-            assignedTo={data.assignedTo || null}
-            internalNotes={data.internalNotes || null}
-            releaseStatus={data.releaseStatus}
-            releasePartner={data.releasePartner}
-            releaseAuthorizedAt={data.releaseAuthorizedAt}
-            hasDocumentScoring={!!hasDocumentBasedScoring}
-          />
-        )}
+        {/* Hero Section - with subtle gradient accent */}
+        <div className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 mb-6 overflow-hidden">
+          {/* Decorative accent bar */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-teal-600 dark:bg-teal-500" />
 
-        {/* Legal Partner Panel - Admin only */}
-        {isAdmin && legalInfo && (
-          <LegalPartnerPanel
-            dealId={data.id}
-            legalInfo={legalInfo}
-            currentStage={data.stage}
-          />
-        )}
-
-        {/* Hero Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 mb-8">
           {/* Main Info */}
           <div className="flex items-end justify-between gap-6">
             <div>
@@ -360,59 +322,38 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
         {/* Tab Content */}
         {activeTab === 'overview' && (
           <>
-          <div className="grid lg:grid-cols-5 gap-8">
-            {/* Left Column - Score Card & Checklist (3 cols) */}
+          {/* Main Two-Column Layout */}
+          <div className="grid lg:grid-cols-5 gap-6">
+            {/* Left Column - Score & Checklist (3 cols) */}
             <div className="lg:col-span-3 space-y-6">
-              {/* Portfolio Assessment Score Card - Only shown after documents are analyzed */}
-              {hasDocumentBasedScoring ? (
-                <>
-                  <ScoreResultsCard
-                    assessment={{
-                      overallScore: portfolioAssessment.overallScore,
-                      letterGrade: portfolioAssessment.letterGrade || 'N/A',
-                      status: portfolioAssessment.status,
-                      tokenizationReadiness: portfolioAssessment.tokenizationReadiness || 'not_ready',
-                      readyPercentage: portfolioAssessment.readyPercentage,
-                      conditionalPercentage: portfolioAssessment.conditionalPercentage,
-                      notReadyPercentage: portfolioAssessment.notReadyPercentage,
-                      summary: portfolioAssessment.summary || undefined,
-                      strengths: portfolioAssessment.strengths,
-                      concerns: portfolioAssessment.concerns,
-                      recommendations: portfolioAssessment.recommendations,
-                      redFlags: portfolioAssessment.redFlags,
-                      scores: portfolioAssessment.scores,
-                      hasAIAnalysis: portfolioAssessment.hasAIAnalysis || false,
-                      estimatedTimeline: portfolioAssessment.estimatedTimeline || undefined,
-                    }}
-                    qualificationCode={data.qualificationCode}
-                    companyName={data.companyName}
-                  />
-                  <ScoreHistoryChart dealId={data.id} />
-                </>
-              ) : (
-                /* Placeholder when no scoring yet - prompts document upload */
-                <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-8">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Portfolio Assessment Pending</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
-                      Upload your portfolio documents to receive a comprehensive scoring assessment.
-                    </p>
-                    <Link
-                      href={`/dashboard/documents?deal=${data.id}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      Upload Documents
-                    </Link>
-                  </div>
-                </div>
+              {/* Portfolio Assessment Score Card */}
+              {hasDocumentBasedScoring && (
+                <ScoreResultsCard
+                  assessment={{
+                    overallScore: portfolioAssessment.overallScore,
+                    letterGrade: portfolioAssessment.letterGrade || 'N/A',
+                    status: portfolioAssessment.status,
+                    tokenizationReadiness: portfolioAssessment.tokenizationReadiness || 'not_ready',
+                    readyPercentage: portfolioAssessment.readyPercentage,
+                    conditionalPercentage: portfolioAssessment.conditionalPercentage,
+                    notReadyPercentage: portfolioAssessment.notReadyPercentage,
+                    summary: portfolioAssessment.summary || undefined,
+                    strengths: portfolioAssessment.strengths,
+                    concerns: portfolioAssessment.concerns,
+                    recommendations: portfolioAssessment.recommendations,
+                    redFlags: portfolioAssessment.redFlags,
+                    scores: portfolioAssessment.scores,
+                    hasAIAnalysis: portfolioAssessment.hasAIAnalysis || false,
+                    estimatedTimeline: portfolioAssessment.estimatedTimeline || undefined,
+                  }}
+                  qualificationCode={data.qualificationCode}
+                  companyName={data.companyName}
+                />
+              )}
+
+              {/* Score History */}
+              {hasDocumentBasedScoring && (
+                <ScoreHistoryChart dealId={data.id} />
               )}
 
               {/* Document Checklist */}
@@ -425,8 +366,9 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
               />
             </div>
 
-            {/* Right Column - Capital Alignment (2 cols) */}
-            <div className="lg:col-span-2">
+            {/* Right Column - Partners & Admin (2 cols) */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Capital Alignment */}
               <CapitalAlignment
                 fundingAmount={data.fundingAmount}
                 fundingPurpose={data.fundingPurpose}
@@ -436,6 +378,24 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
                 documentsComplete={data.stage !== 'draft' && data.stage !== 'qualified'}
                 dealId={data.id}
               />
+
+              {/* Legal & SPV Fees - Read-only for clients */}
+              {!isAdmin && (
+                <DealLegalFees dealId={data.id} isEditable={false} showSummaryOnly={true} />
+              )}
+
+              {/* Consolidated Deal Management Panel - Admin only */}
+              {isAdmin && (
+                <DealManagementPanel
+                  dealId={data.id}
+                  currentStage={data.stage as FundingApplicationStage}
+                  internalNotes={data.internalNotes || null}
+                  releaseStatus={data.releaseStatus}
+                  releasePartner={data.releasePartner}
+                  hasDocumentScoring={!!hasDocumentBasedScoring}
+                  legalInfo={legalInfo}
+                />
+              )}
             </div>
           </div>
 
@@ -486,7 +446,7 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
                   {/* Progress Track */}
                   <div className="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-green-500 rounded-full transition-all duration-500"
+                      className="h-full bg-teal-600 dark:bg-teal-500 rounded-full transition-all duration-500"
                       style={{ width: `${currentStageIndex >= 0 ? ((currentStageIndex + 1) / timelineStages.length) * 100 : 0}%` }}
                     />
                   </div>
@@ -501,8 +461,8 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
                       return (
                         <div key={stage.key} className="flex flex-col items-center" style={{ width: `${100 / timelineStages.length}%` }}>
                           <div className={`w-3 h-3 rounded-full ${
-                            isComplete ? 'bg-green-500' :
-                            isCurrent ? 'bg-green-500 ring-4 ring-green-100 dark:ring-green-900/50' :
+                            isComplete ? 'bg-teal-600 dark:bg-teal-500' :
+                            isCurrent ? 'bg-teal-600 dark:bg-teal-500 ring-4 ring-teal-100 dark:ring-teal-900/50' :
                             'bg-gray-300 dark:bg-gray-600'
                           }`} />
                           <p className={`text-xs mt-2 text-center ${
@@ -534,20 +494,20 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
                       {/* Vertical Line */}
                       {!isLast && (
                         <div className={`absolute left-[11px] top-6 w-0.5 h-full ${
-                          isComplete ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'
+                          isComplete ? 'bg-teal-600 dark:bg-teal-500' : 'bg-gray-200 dark:bg-gray-700'
                         }`} />
                       )}
 
                       {/* Status Indicator */}
                       <div className="relative z-10 flex-shrink-0">
                         {isComplete ? (
-                          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                          <div className="w-6 h-6 rounded-full bg-teal-600 dark:bg-teal-500 flex items-center justify-center">
                             <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                           </div>
                         ) : isCurrent ? (
-                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center ring-4 ring-blue-100 dark:ring-blue-900/50">
+                          <div className="w-6 h-6 rounded-full bg-teal-600 dark:bg-teal-500 flex items-center justify-center ring-4 ring-teal-100 dark:ring-teal-900/50">
                             <div className="w-2 h-2 rounded-full bg-white" />
                           </div>
                         ) : (
@@ -571,8 +531,8 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
                           {stage.description}
                         </p>
                         {isCurrent && (
-                          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                          <div className="mt-3 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+                            <p className="text-sm font-medium text-teal-700 dark:text-teal-400">
                               Currently at this stage
                             </p>
                           </div>
@@ -589,15 +549,15 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
               <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4">Parties Involved</h3>
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">BitCense</span>
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">BitCense</span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">Review & Coordination</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">Legal</span>
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">Legal</span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">Documentation</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Complete</span>
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400">Complete</span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">Funded</span>
                 </div>
               </div>
@@ -678,32 +638,12 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
         )}
 
         {/* Actions */}
-        <div className="mt-8 grid md:grid-cols-2 gap-4">
-          <Link
-            href={`/dashboard/documents?deal=${data.id}`}
-            className="group bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-5 hover:border-gray-900 dark:hover:border-white transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-gray-900 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-base font-bold text-gray-900 dark:text-white">Upload Documents</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Financials, loan tape, legal documents</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </Link>
-
+        <div className="mt-8">
           <a
             href="https://cal.com/bitcense/capital-qualification-intro"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-5 hover:border-gray-900 dark:hover:border-white transition-all"
+            className="group block bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-5 hover:border-gray-900 dark:hover:border-white transition-all"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-lg bg-gray-900 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
@@ -722,14 +662,28 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
           </a>
         </div>
 
-        {/* Delete & Help */}
+        {/* Footer Actions */}
         <div className="mt-8 pt-6 border-t-2 border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-red-300 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 font-medium text-sm transition-colors"
-          >
-            Delete Offering
-          </button>
+          {/* Client: Withdraw option (non-destructive) */}
+          {!isAdmin && !isTerminalState && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-400 hover:text-gray-600 dark:hover:border-gray-500 dark:hover:text-gray-300 font-medium text-sm transition-colors"
+            >
+              Withdraw Application
+            </button>
+          )}
+          {/* Admin: Delete option (destructive - permanent removal) */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-red-300 hover:text-red-600 dark:hover:border-red-500 dark:hover:text-red-400 font-medium text-sm transition-colors"
+            >
+              Delete Offering
+            </button>
+          )}
+          {/* Show nothing if terminal state for non-admin */}
+          {!isAdmin && isTerminalState && <div />}
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Questions? Email{' '}
             <a href="mailto:capital@bitcense.com" className="text-gray-900 dark:text-white hover:underline font-semibold">
@@ -737,9 +691,8 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
             </a>
           </p>
         </div>
-      </main>
 
-      {/* Delete Confirmation Modal */}
+      {/* Withdraw/Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Backdrop */}
@@ -748,50 +701,77 @@ export default function ApplicationDashboard({ data, isAdmin = false, userId, po
             onClick={() => !isDeleting && setShowDeleteModal(false)}
           />
 
-          {/* Modal */}
+          {/* Modal - Different content for clients vs admins */}
           <div className="relative bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 w-full max-w-md mx-4 shadow-xl">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Delete Offering</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone</p>
-              </div>
-            </div>
-
-            <p className="text-base text-gray-600 dark:text-gray-300 mb-6">
-              Are you sure you want to permanently delete this offering? All associated data will be removed and cannot be recovered.
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteOffering}
-                disabled={isDeleting}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-base hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            {isAdmin ? (
+              // Admin: Delete (permanent)
+              <>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
-              </button>
-            </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Delete Offering</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone</p>
+                  </div>
+                </div>
+                <p className="text-base text-gray-600 dark:text-gray-300 mb-6">
+                  Are you sure you want to permanently delete this offering? All associated data will be removed and cannot be recovered.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteOffering}
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 text-white font-semibold text-base hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              // Client: Withdraw (status change, keeps record)
+              <>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Withdraw Application</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">You can reapply later if needed</p>
+                  </div>
+                </div>
+                <p className="text-base text-gray-600 dark:text-gray-300 mb-6">
+                  Are you sure you want to withdraw this funding application? Your application record will be kept, but it will no longer be under consideration.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleWithdrawOffering}
+                    disabled={isDeleting}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-semibold text-base hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isDeleting ? 'Withdrawing...' : 'Withdraw'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -816,12 +796,12 @@ function LegalPartnerPanel({
 
   const statusColors: Record<string, { bg: string; text: string; label: string }> = {
     not_required: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Not Required' },
-    pending: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', label: 'Pending Assignment' },
-    assigned: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Assigned' },
-    in_review: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', label: 'In Review' },
-    approved: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Approved' },
-    changes_required: { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-400', label: 'Changes Required' },
-    rejected: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', label: 'Rejected' },
+    pending: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Pending Assignment' },
+    assigned: { bg: 'bg-teal-50 dark:bg-teal-900/30', text: 'text-teal-600 dark:text-teal-400', label: 'Assigned' },
+    in_review: { bg: 'bg-teal-50 dark:bg-teal-900/30', text: 'text-teal-600 dark:text-teal-400', label: 'In Review' },
+    approved: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Approved' },
+    changes_required: { bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-600 dark:text-gray-400', label: 'Changes Required' },
+    rejected: { bg: 'bg-red-50 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', label: 'Rejected' },
   }
 
   const currentStatus = statusColors[legalInfo.status] || statusColors.not_required
@@ -858,11 +838,11 @@ function LegalPartnerPanel({
   }
 
   return (
-    <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-5 mb-6">
+    <div className="bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-800/50 flex items-center justify-center">
-            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
             </svg>
           </div>
@@ -877,26 +857,30 @@ function LegalPartnerPanel({
       </div>
 
       {legalInfo.partnerName ? (
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Assigned to</p>
-              <p className="font-semibold text-gray-900 dark:text-white">{legalInfo.partnerName}</p>
-            </div>
-            {legalInfo.signedOffAt && (
-              <div className="text-right">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Signed off</p>
-                <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                  {new Date(legalInfo.signedOffAt).toLocaleDateString()}
-                </p>
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Assigned to</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{legalInfo.partnerName}</p>
               </div>
+              {legalInfo.signedOffAt && (
+                <div className="text-right">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Signed off</p>
+                  <p className="text-sm font-medium text-green-600 dark:text-green-400">
+                    {new Date(legalInfo.signedOffAt).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+            {legalInfo.notes && (
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 italic">
+                "{legalInfo.notes}"
+              </p>
             )}
           </div>
-          {legalInfo.notes && (
-            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400 italic">
-              "{legalInfo.notes}"
-            </p>
-          )}
+          {/* Legal & SPV Fees */}
+          <DealLegalFees dealId={dealId} isEditable={true} />
         </div>
       ) : legalInfo.availablePartners.length > 0 ? (
         <div className="space-y-4">
@@ -932,7 +916,7 @@ function LegalPartnerPanel({
           <button
             onClick={handleAssignLegalPartner}
             disabled={!selectedPartner || isAssigning}
-            className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2.5 bg-gray-900 dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isAssigning ? 'Assigning...' : 'Assign Legal Partner'}
           </button>
@@ -944,7 +928,7 @@ function LegalPartnerPanel({
           </p>
           <Link
             href="/dashboard/admin/partners"
-            className="inline-flex items-center gap-2 mt-3 text-blue-600 dark:text-blue-400 font-medium hover:underline"
+            className="inline-flex items-center gap-2 mt-3 text-teal-600 dark:text-teal-400 font-medium hover:underline"
           >
             Manage Partners
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

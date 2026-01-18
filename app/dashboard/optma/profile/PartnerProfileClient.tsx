@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FundingPartner } from '@/lib/types'
 import {
   BadgeCheck,
@@ -26,6 +26,7 @@ import {
   Calendar,
   TrendingUp
 } from 'lucide-react'
+import TermsModal from '@/components/legal/TermsModal'
 
 interface PartnerProfileClientProps {
   partner: FundingPartner
@@ -57,6 +58,31 @@ export default function PartnerProfileClient({ partner: initialPartner }: Partne
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Terms state
+  const [showPartnerAgreement, setShowPartnerAgreement] = useState(false)
+  const [checkingTerms, setCheckingTerms] = useState(true)
+
+  // Check if user has accepted Partner Network Agreement on mount
+  useEffect(() => {
+    const checkTermsAcceptance = async () => {
+      try {
+        const response = await fetch(`/api/terms/check?document_type=partner_network_agreement&context_entity_id=${partner.id}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (!data.has_accepted) {
+            setShowPartnerAgreement(true)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to check terms acceptance:', e)
+      } finally {
+        setCheckingTerms(false)
+      }
+    }
+
+    checkTermsAcceptance()
+  }, [partner.id])
 
   // Form state
   const [formData, setFormData] = useState({
@@ -111,8 +137,28 @@ export default function PartnerProfileClient({ partner: initialPartner }: Partne
     }))
   }
 
+  // Show loading while checking terms
+  if (checkingTerms) {
+    return (
+      <div className="max-w-4xl mx-auto flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Partner Network Agreement Modal */}
+      <TermsModal
+        documentType="partner_network_agreement"
+        contextType="partner_onboarding"
+        contextEntityId={partner.id}
+        isOpen={showPartnerAgreement}
+        onClose={() => {}}
+        onAccept={() => setShowPartnerAgreement(false)}
+        blocking={true}
+      />
+
       {/* Profile Header Card */}
       <div className="bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 rounded-2xl overflow-hidden shadow-xl">
         {/* Cover Pattern */}

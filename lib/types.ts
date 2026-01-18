@@ -976,6 +976,7 @@ export type PartnerDealAction =
   | 'pass'
   | 'start_due_diligence'
   | 'add_note'
+  | 'assign_legal'
 
 // Partner dashboard filter tabs
 export type PartnerDashboardTab =
@@ -985,3 +986,165 @@ export type PartnerDashboardTab =
   | 'due_diligence'
   | 'passed'
   | 'funded'
+
+// ============================================
+// LEGAL & SPV FEE TYPES
+// ============================================
+
+// Fee type (how the fee is calculated)
+export type FeeType = 'flat' | 'hourly' | 'percentage' | 'annual'
+
+// Fee category
+export type FeeCategory = 'legal' | 'spv' | 'maintenance' | 'custom'
+
+// Fee status (for deal-specific fees)
+export type FeeStatus = 'pending' | 'invoiced' | 'paid' | 'waived'
+
+// Predefined fee catalog item
+export interface LegalFeeCatalogItem {
+  id: string
+  name: string
+  description: string | null
+  base_amount: number
+  fee_type: FeeType
+  category: FeeCategory
+  display_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Fee assigned to a specific deal
+export interface DealLegalFee {
+  id: string
+  deal_id: string
+  fee_catalog_id: string | null  // null for custom fees
+
+  // Fee details
+  name: string
+  description: string | null
+  amount: number
+  fee_type: FeeType
+  category: FeeCategory
+
+  // For hourly fees
+  hours: number | null
+  hourly_rate: number | null
+
+  // For percentage fees
+  percentage_rate: number | null
+  percentage_base: string | null
+
+  // Status
+  status: FeeStatus
+
+  // Audit trail
+  added_by: string | null
+  added_at: string
+  invoiced_at: string | null
+  paid_at: string | null
+  waived_at: string | null
+  waived_reason: string | null
+
+  notes: string | null
+  created_at: string
+  updated_at: string
+
+  // Joined data
+  catalog_item?: LegalFeeCatalogItem
+  added_by_user?: {
+    email: string
+    full_name: string | null
+  }
+}
+
+// Fee summary for a deal
+export interface DealFeeSummary {
+  total_amount: number
+  pending_amount: number
+  paid_amount: number
+  fee_count: number
+}
+
+// ============================================
+// LEGAL TERMS ACKNOWLEDGEMENT TYPES
+// ============================================
+
+// Type of terms document
+export type TermsDocumentType =
+  | 'platform_tos'           // Platform Terms of Service (signup)
+  | 'originator_agreement'   // Originator Agreement (first offering)
+  | 'offering_certification' // Offering Certification (each deal submission)
+  | 'partner_network_agreement' // Partner Network Agreement (partner onboarding)
+  | 'deal_confidentiality'   // Deal Confidentiality/NDA (express interest)
+
+// Context in which terms were accepted
+export type TermsContextType =
+  | 'signup'              // Account creation (ToS)
+  | 'first_offering'      // First offering submission (Originator Agreement)
+  | 'offering_submission' // Each deal submission (Offering Certification)
+  | 'partner_onboarding'  // Partner profile access (Partner Network Agreement)
+  | 'deal_interest'       // Express interest in deal (Deal Confidentiality)
+
+// Terms document record
+export interface TermsDocument {
+  id: string
+  document_type: TermsDocumentType
+  version: string
+  effective_date: string
+  title: string
+  summary: string | null
+  content: string
+  is_active: boolean
+  requires_scroll: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+// User's acknowledgement of terms
+export interface TermsAcknowledgement {
+  id: string
+  user_id: string
+  terms_document_id: string
+  context_type: TermsContextType
+  context_entity_id: string | null
+  acknowledged_at: string
+  ip_address: string | null
+  user_agent: string | null
+  checkbox_confirmed: boolean
+  scrolled_to_bottom: boolean
+  created_at: string
+  // Joined data
+  terms_document?: TermsDocument
+  user?: {
+    email: string
+    full_name: string | null
+  }
+}
+
+// Request body for acknowledging terms
+export interface AcknowledgeTermsRequest {
+  document_type: TermsDocumentType
+  context_type: TermsContextType
+  context_entity_id?: string
+  checkbox_confirmed: boolean
+  scrolled_to_bottom: boolean
+}
+
+// Response from terms check API
+export interface TermsCheckResponse {
+  has_accepted: boolean
+  terms_document?: TermsDocument
+  acknowledgement?: TermsAcknowledgement
+}
+
+// Admin filters for acknowledgements list
+export interface AcknowledgementsFilters {
+  user_id?: string
+  document_type?: TermsDocumentType
+  context_type?: TermsContextType
+  date_from?: string
+  date_to?: string
+  search?: string
+}

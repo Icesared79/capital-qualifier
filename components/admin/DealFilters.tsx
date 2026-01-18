@@ -8,19 +8,39 @@ import { STAGE_CONFIG } from '@/lib/workflow'
 interface DealFiltersProps {
   stages: FundingApplicationStage[]
   currentStage?: FundingApplicationStage
+  currentStages?: string  // comma-separated stages from URL
   currentHandoff?: HandoffTarget
   currentSearch: string
+}
+
+// Pipeline bucket labels for display
+const PIPELINE_BUCKETS: Record<string, { label: string; stages: string[] }> = {
+  'draft,qualified': { label: 'Intake', stages: ['draft', 'qualified'] },
+  'documents_requested,documents_in_review': { label: 'Documents', stages: ['documents_requested', 'documents_in_review'] },
+  'due_diligence,term_sheet,negotiation': { label: 'With Partner', stages: ['due_diligence', 'term_sheet', 'negotiation'] },
+  'closing': { label: 'Closing', stages: ['closing'] },
+  'funded': { label: 'Funded', stages: ['funded'] },
+  'declined': { label: 'Declined', stages: ['declined'] },
+  'withdrawn': { label: 'Withdrawn', stages: ['withdrawn'] },
 }
 
 export default function DealFilters({
   stages,
   currentStage,
+  currentStages,
   currentHandoff,
   currentSearch,
 }: DealFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(currentSearch)
+
+  // Determine active filter label
+  const activeFilterLabel = currentStages
+    ? PIPELINE_BUCKETS[currentStages]?.label || currentStages.split(',').join(', ')
+    : currentStage
+    ? STAGE_CONFIG[currentStage]?.label || currentStage
+    : null
 
   const updateFilters = useCallback((updates: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -49,10 +69,26 @@ export default function DealFilters({
     router.push('/dashboard/admin/deals')
   }, [router])
 
-  const hasFilters = currentStage || currentHandoff || currentSearch
+  const hasFilters = currentStage || currentStages || currentHandoff || currentSearch
 
   return (
     <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4">
+      {/* Active filter badge */}
+      {activeFilterLabel && (
+        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100 dark:border-gray-700">
+          <span className="text-sm text-gray-500 dark:text-gray-400">Showing:</span>
+          <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-sm font-medium">
+            {activeFilterLabel}
+          </span>
+          <button
+            onClick={clearFilters}
+            className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            Show all
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
         <form onSubmit={handleSearch} className="flex-1">
@@ -86,7 +122,7 @@ export default function DealFilters({
         <div className="w-full md:w-48">
           <select
             value={currentStage || ''}
-            onChange={(e) => updateFilters({ stage: e.target.value || undefined })}
+            onChange={(e) => updateFilters({ stage: e.target.value || undefined, stages: undefined })}
             className="w-full px-4 py-2.5 text-base border-2 border-gray-200 dark:border-gray-600 rounded-xl
                      bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white
                      focus:border-gray-400 dark:focus:border-gray-500 focus:outline-none transition-colors"
@@ -114,17 +150,6 @@ export default function DealFilters({
             <option value="optma">Funding Partner</option>
           </select>
         </div>
-
-        {/* Clear Filters */}
-        {hasFilters && (
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-400
-                     hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            Clear filters
-          </button>
-        )}
       </div>
     </div>
   )

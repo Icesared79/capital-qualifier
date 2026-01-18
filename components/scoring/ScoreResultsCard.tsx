@@ -72,34 +72,20 @@ interface ScoreResultsCardProps {
   }
 }
 
-const gradeColors: Record<string, string> = {
-  'A+': 'text-emerald-600 bg-emerald-100',
-  'A': 'text-emerald-600 bg-emerald-100',
-  'A-': 'text-emerald-600 bg-emerald-100',
-  'B+': 'text-blue-600 bg-blue-100',
-  'B': 'text-blue-600 bg-blue-100',
-  'B-': 'text-blue-600 bg-blue-100',
-  'C+': 'text-yellow-600 bg-yellow-100',
-  'C': 'text-yellow-600 bg-yellow-100',
-  'C-': 'text-yellow-600 bg-yellow-100',
-  'D': 'text-orange-600 bg-orange-100',
-  'F': 'text-red-600 bg-red-100',
-}
-
 const readinessConfig = {
   ready: {
     label: 'Ready for Tokenization',
-    color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+    color: 'text-teal-700 bg-teal-50 border-teal-200 dark:text-teal-400 dark:bg-teal-900/30 dark:border-teal-700',
     icon: CheckCircle,
   },
   conditional: {
     label: 'Conditionally Ready',
-    color: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+    color: 'text-gray-600 bg-gray-100 border-gray-200 dark:text-gray-400 dark:bg-gray-700 dark:border-gray-600',
     icon: AlertTriangle,
   },
   not_ready: {
     label: 'Not Ready',
-    color: 'text-red-700 bg-red-50 border-red-200',
+    color: 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/30 dark:border-red-700',
     icon: XCircle,
   },
 }
@@ -173,9 +159,6 @@ export function ScoreResultsCard({ assessment, compact = false, qualificationCod
             <div className="flex items-baseline gap-3 mt-2">
               <span className="text-5xl font-bold">{assessment.overallScore}</span>
               <span className="text-2xl text-gray-400">/100</span>
-              <span className={`px-3 py-1 rounded-lg text-lg font-bold ${gradeColors[assessment.letterGrade] || 'text-gray-600 bg-gray-100'}`}>
-                {assessment.letterGrade}
-              </span>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -198,15 +181,15 @@ export function ScoreResultsCard({ assessment, compact = false, qualificationCod
         <div className="mt-6">
           <div className="flex h-3 rounded-full overflow-hidden bg-gray-700">
             <div
-              className="bg-emerald-500 transition-all duration-500"
+              className="bg-teal-500 transition-all duration-500"
               style={{ width: `${assessment.readyPercentage}%` }}
             />
             <div
-              className="bg-yellow-500 transition-all duration-500"
+              className="bg-gray-500 transition-all duration-500"
               style={{ width: `${assessment.conditionalPercentage}%` }}
             />
             <div
-              className="bg-red-500 transition-all duration-500"
+              className="bg-gray-600 transition-all duration-500"
               style={{ width: `${assessment.notReadyPercentage}%` }}
             />
           </div>
@@ -220,8 +203,8 @@ export function ScoreResultsCard({ assessment, compact = false, qualificationCod
 
       {/* AI Summary */}
       {assessment.summary && (
-        <div className="px-6 py-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 mb-2">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-2">
             <Sparkles className="w-4 h-4" />
             <span className="text-sm font-medium">AI Analysis</span>
           </div>
@@ -276,17 +259,12 @@ export function ScoreResultsCard({ assessment, compact = false, qualificationCod
                       <div className="flex justify-between text-sm mb-1">
                         <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
                         <span className="text-gray-500">
-                          {score.score}/100 ({score.grade}) • {(score.weight * 100).toFixed(0)}% weight
+                          {score.score}/100 • {(score.weight * 100).toFixed(0)}% weight
                         </span>
                       </div>
                       <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            score.score >= 80 ? 'bg-emerald-500' :
-                            score.score >= 60 ? 'bg-blue-500' :
-                            score.score >= 40 ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }`}
+                          className="h-full rounded-full transition-all duration-500 bg-teal-500"
                           style={{ width: `${score.score}%` }}
                         />
                       </div>
@@ -303,14 +281,14 @@ export function ScoreResultsCard({ assessment, compact = false, qualificationCod
       <div className="px-6 py-4 grid md:grid-cols-2 gap-6 border-b border-gray-200 dark:border-gray-700">
         {assessment.strengths.length > 0 && (
           <div>
-            <h4 className="font-semibold text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
-              <CheckCircle className="w-4 h-4" />
+            <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-gray-500" />
               Strengths
             </h4>
             <ul className="space-y-2">
               {assessment.strengths.map((strength, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="text-emerald-500 mt-1">+</span>
+                  <span className="text-gray-400 mt-1">+</span>
                   {strength}
                 </li>
               ))}
@@ -320,14 +298,14 @@ export function ScoreResultsCard({ assessment, compact = false, qualificationCod
 
         {assessment.concerns.length > 0 && (
           <div>
-            <h4 className="font-semibold text-yellow-700 dark:text-yellow-400 mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
+            <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-gray-500" />
               Concerns
             </h4>
             <ul className="space-y-2">
               {assessment.concerns.map((concern, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="text-yellow-500 mt-1">!</span>
+                  <span className="text-gray-400 mt-1">!</span>
                   {concern}
                 </li>
               ))}

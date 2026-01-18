@@ -1,0 +1,16 @@
+loan_id,borrower_name,original_balance,current_balance,interest_rate,origination_date,maturity_date,payment_status,property_type,ltv,dscr,property_address,city,state,zip_code
+LN-001,ABC Properties LLC,500000,485000,7.5,2024-01-15,2026-01-15,Current,Multifamily,65,1.45,123 Main St,Austin,TX,78701
+LN-002,Smith Holdings Inc,750000,742000,8.0,2024-02-01,2026-02-01,Current,Office,70,1.32,456 Commerce Dr,Dallas,TX,75201
+LN-003,Johnson Real Estate,300000,295000,7.25,2024-01-20,2025-07-20,Current,Retail,60,1.55,789 Market St,Houston,TX,77002
+LN-004,Metro Investments,1200000,1180000,7.75,2024-03-10,2026-03-10,Current,Industrial,68,1.28,321 Industrial Blvd,San Antonio,TX,78201
+LN-005,Sunrise Capital,450000,448000,8.25,2024-04-01,2025-10-01,Current,Multifamily,72,1.38,555 Sunset Ave,Austin,TX,78702
+LN-006,Pacific Ventures,600000,590000,7.5,2024-02-15,2026-02-15,30 Days Late,Office,67,1.22,777 Pacific Hwy,Dallas,TX,75202
+LN-007,Mountain View LLC,850000,840000,7.0,2024-01-05,2026-01-05,Current,Retail,63,1.48,999 Mountain Rd,Houston,TX,77003
+LN-008,Coastal Properties,400000,395000,8.5,2024-05-01,2025-11-01,Current,Multifamily,75,1.35,111 Coastal Dr,Galveston,TX,77550
+LN-009,Urban Development Co,950000,935000,7.25,2024-03-20,2026-03-20,Current,Mixed Use,69,1.42,222 Urban Center,Austin,TX,78703
+LN-010,Green Valley Investments,550000,540000,7.75,2024-04-15,2026-04-15,Current,Industrial,64,1.51,333 Valley Industrial,Dallas,TX,75203
+LN-011,Heritage Realty Trust,700000,688000,8.0,2024-02-28,2026-02-28,Current,Office,71,1.29,444 Heritage Plaza,Houston,TX,77004
+LN-012,Apex Holdings,380000,375000,7.5,2024-01-25,2025-07-25,Current,Retail,62,1.44,666 Apex Mall,San Antonio,TX,78202
+LN-013,Riverfront Partners,1100000,1085000,7.25,2024-03-05,2026-03-05,Current,Multifamily,66,1.52,888 River Walk,Austin,TX,78704
+LN-014,Skyline Ventures,480000,470000,8.25,2024-05-10,2025-11-10,60 Days Late,Office,74,1.18,101 Skyline Tower,Dallas,TX,75204
+LN-015,Lone Star Capital,650000,642000,7.0,2024-04-20,2026-04-20,Current,Industrial,61,1.56,202 Lone Star Way,Houston,TX,77005

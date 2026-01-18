@@ -2,28 +2,49 @@
  * Utility functions for formatting values consistently across the application
  */
 
-// Funding amount range labels (key -> display label)
-export const FUNDING_AMOUNT_LABELS: Record<string, string> = {
-  under_500k: 'Under $500K',
-  '500k_2m': '$500K - $2M',
-  '2m_10m': '$2M - $10M',
-  '10m_50m': '$10M - $50M',
-  over_50m: '$50M+',
+// Funding amount range keys -> upper bound values for display
+// We display the upper bound as the "target" amount for consistency
+const FUNDING_AMOUNT_VALUES: Record<string, number> = {
+  under_500k: 500_000,
+  '500k_2m': 2_000_000,
+  '2m_10m': 10_000_000,
+  '10m_50m': 50_000_000,
+  over_50m: 50_000_000, // Shows as "$50M+"
+}
+
+// Flag for ranges that should show "+" suffix
+const OPEN_ENDED_RANGES = ['over_50m']
+
+/**
+ * Format a number as compact currency (shorthand: $10M, $500K, etc.)
+ * This is the standard format for displaying dollar amounts
+ */
+function formatAsCompactCurrency(num: number): string {
+  if (num >= 1_000_000_000) {
+    return `$${(num / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`
+  }
+  if (num >= 1_000_000) {
+    return `$${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+  }
+  if (num >= 1_000) {
+    return `$${Math.round(num / 1_000)}K`
+  }
+  return `$${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 }
 
 /**
  * Format a capital/funding amount for display
  *
  * Handles:
- * - Numbers (10000000 -> "$10,000,000")
- * - String numbers ("10000000" -> "$10,000,000")
- * - Range keys ("10m_50m" -> "$10M - $50M")
- * - Already formatted strings ("$15,000,000 - $50,000,000" -> pass through)
+ * - Numbers (10000000 -> "$10M")
+ * - String numbers ("10000000" -> "$10M")
+ * - Range keys ("500k_2m" -> "$2M", "over_50m" -> "$50M+")
+ * - Already formatted strings ("$15M" -> pass through)
  * - null/undefined -> returns fallback
  *
  * @param amount The amount to format (number, string, or null)
  * @param fallback Value to return if amount is null/undefined (default: "Amount TBD")
- * @returns Formatted string for display
+ * @returns Formatted string for display (always compact format like $2M, $500K)
  */
 export function formatCapitalAmount(
   amount: string | number | null | undefined,
@@ -33,17 +54,23 @@ export function formatCapitalAmount(
     return fallback
   }
 
-  // If it's a number, format it directly
+  // If it's a number, format it directly with compact notation
   if (typeof amount === 'number') {
-    return formatNumberAsCurrency(amount)
+    return formatAsCompactCurrency(amount)
   }
 
   // It's a string - check various cases
   const str = String(amount).trim()
 
-  // Check if it matches a range key label
-  if (FUNDING_AMOUNT_LABELS[str]) {
-    return FUNDING_AMOUNT_LABELS[str]
+  // Check if it matches a range key - convert to upper bound value
+  if (FUNDING_AMOUNT_VALUES[str]) {
+    const value = FUNDING_AMOUNT_VALUES[str]
+    const formatted = formatAsCompactCurrency(value)
+    // Add "+" suffix for open-ended ranges
+    if (OPEN_ENDED_RANGES.includes(str)) {
+      return formatted + '+'
+    }
+    return formatted
   }
 
   // Check if it's already formatted (starts with $)
@@ -56,7 +83,7 @@ export function formatCapitalAmount(
   if (/^\d+(\.\d+)?$/.test(cleanedNumber)) {
     const num = parseFloat(cleanedNumber)
     if (!isNaN(num)) {
-      return formatNumberAsCurrency(num)
+      return formatAsCompactCurrency(num)
     }
   }
 
@@ -66,7 +93,7 @@ export function formatCapitalAmount(
     const low = parseFloat(rangeMatch[1].replace(/,/g, ''))
     const high = parseFloat(rangeMatch[2].replace(/,/g, ''))
     if (!isNaN(low) && !isNaN(high)) {
-      return `${formatNumberAsCurrency(low)} - ${formatNumberAsCurrency(high)}`
+      return `${formatAsCompactCurrency(low)} - ${formatAsCompactCurrency(high)}`
     }
   }
 
@@ -75,27 +102,8 @@ export function formatCapitalAmount(
 }
 
 /**
- * Format a number as currency with $ prefix and thousand separators
- * For large numbers (>= 1M), optionally uses shorthand
- */
-function formatNumberAsCurrency(num: number, useShorthand: boolean = false): string {
-  if (useShorthand) {
-    if (num >= 1_000_000_000) {
-      return `$${(num / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`
-    }
-    if (num >= 1_000_000) {
-      return `$${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-    }
-    if (num >= 1_000) {
-      return `$${(num / 1_000).toFixed(0)}K`
-    }
-  }
-
-  return `$${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
-}
-
-/**
  * Format a number as compact currency (always use shorthand: $10M, $500K, etc.)
+ * Alias for consistency with older code
  */
 export function formatCompactCurrency(num: number | string | null | undefined): string {
   if (num === null || num === undefined || num === '') {
@@ -114,14 +122,13 @@ export function formatCompactCurrency(num: number | string | null | undefined): 
     value = num
   }
 
-  if (value >= 1_000_000_000) {
-    return `$${(value / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}B`
-  }
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-  }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(0)}K`
-  }
-  return `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+  return formatAsCompactCurrency(value)
+}
+
+/**
+ * Format a number as full currency with $ prefix and thousand separators
+ * Use this only when you need the exact dollar amount (e.g., invoices)
+ */
+export function formatFullCurrency(num: number): string {
+  return `$${num.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 }

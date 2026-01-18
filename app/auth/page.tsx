@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { Suspense } from 'react'
+import TermsCheckbox from '@/components/legal/TermsCheckbox'
 
 function AuthPageContent() {
   const router = useRouter()
@@ -18,6 +19,7 @@ function AuthPageContent() {
   const [mode, setMode] = useState<'signup' | 'login'>(initialMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState(errorParam || '')
@@ -56,6 +58,12 @@ function AuthPageContent() {
         return
       }
 
+      if (!termsAccepted) {
+        setError('You must accept the Terms of Service to create an account')
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -69,6 +77,23 @@ function AuthPageContent() {
         setError('existing_account')
         setLoading(false)
       } else {
+        // Record terms acceptance if we have a user
+        if (data?.user?.id) {
+          try {
+            await fetch('/api/terms/platform_tos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                context_type: 'signup',
+                checkbox_confirmed: true,
+                scrolled_to_bottom: true,
+              }),
+            })
+          } catch (e) {
+            // Non-blocking - user still created
+            console.error('Failed to record terms acceptance:', e)
+          }
+        }
         setSuccess(true)
       }
     } else {
@@ -230,6 +255,22 @@ function AuthPageContent() {
                     placeholder={mode === 'signup' ? 'Min. 8 characters' : 'Your password'}
                   />
                 </div>
+
+                {/* Terms Checkbox - Only shown on signup */}
+                {mode === 'signup' && (
+                  <div className="pt-2">
+                    <TermsCheckbox
+                      documentType="platform_tos"
+                      contextType="signup"
+                      checked={termsAccepted}
+                      onChange={setTermsAccepted}
+                      label="I agree to the"
+                      linkText="Terms of Service"
+                      required
+                    />
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}

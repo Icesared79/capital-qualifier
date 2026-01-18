@@ -44,8 +44,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Draft',
     description: 'Application in progress',
     owner: 'client',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-700',
     actionItems: {
       client: ['Complete your funding application'],
       admin: []
@@ -55,8 +55,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Submitted',
     description: 'Application submitted, awaiting document request',
     owner: 'admin',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: [],
       admin: ['Review application', 'Request documents when ready']
@@ -66,8 +66,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Documents Requested',
     description: 'Additional documents needed',
     owner: 'client',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: ['Upload financial statements', 'Provide bank statements', 'Submit loan tape data', 'Upload performance history'],
       admin: ['Monitor document uploads', 'Review submitted documents']
@@ -77,8 +77,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Documents in Review',
     description: 'Documents being reviewed',
     owner: 'admin',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: ['Respond to any follow-up questions'],
       admin: ['Review all submitted documents', 'Approve or reject documents', 'Request additional information if needed']
@@ -88,8 +88,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Due Diligence',
     description: 'Detailed review in progress',
     owner: 'admin',
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: ['Upload loan agreement samples', 'Provide insurance certificates', 'Be available for follow-up calls'],
       admin: ['Conduct thorough due diligence', 'Schedule calls as needed', 'Prepare term sheet']
@@ -99,8 +99,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Term Sheet',
     description: 'Terms being negotiated',
     owner: 'both',
-    color: 'text-cyan-600',
-    bgColor: 'bg-cyan-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: ['Review proposed terms', 'Upload signed term sheet'],
       admin: ['Issue term sheet', 'Address client questions', 'Negotiate terms as needed']
@@ -110,8 +110,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Negotiation',
     description: 'Final terms being finalized',
     owner: 'both',
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: ['Review final documents', 'Coordinate with legal counsel'],
       admin: ['Finalize documentation', 'Coordinate legal review']
@@ -121,8 +121,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Closing',
     description: 'Deal closing in progress',
     owner: 'both',
-    color: 'text-emerald-600',
-    bgColor: 'bg-emerald-100',
+    color: 'text-teal-600 dark:text-teal-400',
+    bgColor: 'bg-teal-50 dark:bg-teal-900/30',
     actionItems: {
       client: ['Execute final agreements', 'Provide board resolutions', 'Complete closing checklist'],
       admin: ['Coordinate closing', 'Verify all documents', 'Prepare for funding']
@@ -132,8 +132,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Funded',
     description: 'Deal successfully funded',
     owner: 'admin',
-    color: 'text-green-600',
-    bgColor: 'bg-green-100',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-700',
     actionItems: {
       client: [],
       admin: []
@@ -143,8 +143,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Declined',
     description: 'Application was not approved',
     owner: 'admin',
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
+    color: 'text-red-600 dark:text-red-400',
+    bgColor: 'bg-red-50 dark:bg-red-900/30',
     actionItems: {
       client: [],
       admin: []
@@ -154,8 +154,8 @@ export const STAGE_CONFIG: Record<FundingApplicationStage, StageConfig> = {
     label: 'Withdrawn',
     description: 'Application withdrawn by applicant',
     owner: 'client',
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-100',
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-700',
     actionItems: {
       client: [],
       admin: []

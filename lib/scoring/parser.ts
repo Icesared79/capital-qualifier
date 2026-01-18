@@ -128,6 +128,11 @@ function parsePaymentStatus(value: any): LoanTapeRow['paymentStatus'] {
 function parseDate(value: any): Date | undefined {
   if (!value) return undefined
 
+  // Already a Date object (from XLSX cellDates: true)
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? undefined : value
+  }
+
   // Excel serial date
   if (typeof value === 'number') {
     const date = XLSX.SSF.parse_date_code(value)
