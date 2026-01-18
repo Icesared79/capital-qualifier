@@ -189,67 +189,87 @@ export default function AdminDashboard({
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Handoffs Summary */}
+        {/* BitCense Team */}
         <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            Team Handoffs
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              BitCense Team
+            </h3>
+            <Link
+              href="/dashboard/admin/team"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Manage
+            </Link>
+          </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                  </svg>
-                </div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Legal Team</span>
-              </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                {recentDeals.filter(d => d.handoff_to === 'legal').length}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <span className="font-medium text-gray-700 dark:text-gray-300">Funding Partner</span>
-              </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                {recentDeals.filter(d => d.handoff_to === 'optma').length}
-              </span>
-            </div>
+            {teamMembers
+              .filter(m => m.role === 'admin' || m.role === 'legal')
+              .filter(m => m.full_name || (m.email && !m.email.includes('test')))
+              .map((member) => {
+                const roleLabels: Record<string, string> = {
+                  admin: 'Administrator',
+                  legal: 'Legal',
+                }
+                return (
+                  <div key={member.id} className="flex items-center gap-3 py-2">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white">
+                      {(member.full_name || member.email || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {member.full_name || member.email?.split('@')[0]}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {roleLabels[member.role] || member.role}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
+            {teamMembers.filter(m => m.role === 'admin' || m.role === 'legal').length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">No team members found</p>
+            )}
           </div>
         </div>
 
-        {/* Team Members */}
+        {/* Financial Partners */}
         <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            Team Members
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              Financial Partners
+            </h3>
+            <Link
+              href="/dashboard/admin/partners"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Manage
+            </Link>
+          </div>
           <div className="space-y-3">
-            {teamMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
-                    {(member.full_name || member.email || '?').charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">
-                      {member.full_name || member.email?.split('@')[0]}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {member.role}
-                    </p>
-                  </div>
+            {/* Optima - our primary partner */}
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">O</span>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">Optima</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Primary FP</p>
                 </div>
               </div>
-            ))}
-            {teamMembers.length === 0 && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">No team members found</p>
-            )}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  {recentDeals.filter(d => d.handoff_to === 'optma').length} deals
+                </span>
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Add more partners to expand your funding network
+            </p>
           </div>
         </div>
       </div>

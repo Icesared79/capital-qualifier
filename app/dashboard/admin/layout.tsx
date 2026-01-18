@@ -53,13 +53,13 @@ export default async function AdminLayout({
                 href="/dashboard/admin"
                 className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
-                Pipeline
+                Deals
               </Link>
               <Link
-                href="/dashboard/admin/deals"
+                href="/dashboard/admin/partners"
                 className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
-                All Deals
+                Partners
               </Link>
               <Link
                 href="/dashboard/admin/team"
@@ -67,26 +67,23 @@ export default async function AdminLayout({
               >
                 Team
               </Link>
-              <Link
-                href="/dashboard/admin/scoring"
-                className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Scoring
-              </Link>
-              <Link
-                href="/dashboard"
-                className="text-base font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Client View
-              </Link>
             </nav>
 
-            {/* Right: User + Theme Toggle */}
+            {/* Right: User + Actions */}
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <span className="text-sm text-gray-500 dark:text-gray-400">
                 {user.email}
               </span>
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Exit Admin
+              </Link>
             </div>
           </div>
         </div>
